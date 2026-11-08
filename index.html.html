@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>45歳からの堅実IPO＆資産形成ナビ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans JP', 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- ヘッダー -->
+    <header class="bg-slate-900 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+                <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/20">ミドル世代のマネー戦略</span>
+                <h1 class="text-xl font-bold mt-1.5 flex items-center gap-2">
+                    <span>📈</span> 45歳からの堅実IPO＆資産形成ナビ
+                </h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="syncLatestIPO()" id="sync-btn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                    <span>🔄</span> 最新IPO情報を自動取り込み
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-5xl mx-auto px-4 py-6">
+
+        <!-- 45歳世代向け共感メッセージ ＆ アフィリエイト訴求バナー -->
+        <section class="bg-gradient-to-br from-amber-50 via-white to-amber-50/50 border border-amber-200/80 rounded-2xl p-6 mb-6 shadow-sm">
+            <h2 class="text-slate-900 font-bold text-lg mb-2 flex items-center gap-2">
+                <span>🎯</span> 45歳、今だからこそ「手堅く増やす」選択を。
+            </h2>
+            <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                教育費や老後への不安が現実味を帯びてくるミドル世代。「一発逆転のハイリスク投資は怖いけれど、銀行に眠らせているだけではもったいない」——そんな私たちが、元本割れリスクを極限まで抑えて小さく始められるのがIPO（新規公開株）投資です。まずは資金不要の証券会社から準備を始めましょう。
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- SBI証券 -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">主幹事数 圧倒的No.1</span>
+                        <div class="font-bold text-sm text-slate-900 mt-1.5">SBI証券</div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">外れてもポイントが貯まる、最初の一社。</p>
+                    </div>
+                    <a href="https://example.com/afi/sbi" target="_blank" class="mt-4 block text-center bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-2 rounded-lg font-bold transition shadow-xs">
+                        無料で口座開設する ↗
+                    </a>
+                </div>
+                <!-- 松井証券 -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">抽選時・資金不要</span>
+                        <div class="font-bold text-sm text-slate-900 mt-1.5">松井証券</div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">お金を入れずに申し込めるので安心感抜群。</p>
+                    </div>
+                    <a href="https://example.com/afi/matsui" target="_blank" class="mt-4 block text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded-lg font-bold transition shadow-xs">
+                        無料で口座開設する ↗
+                    </a>
+                </div>
+                <!-- マネックス証券 -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <span class="text-[10px
