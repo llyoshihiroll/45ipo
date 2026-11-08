@@ -78,18 +78,18 @@
             </div>
         </section>
 
-        <!-- ダッシュボード（統計カード） -->
+        <!-- ダッシュボード統計 -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-                <div class="text-xs text-slate-500 font-medium">登録銘柄数</div>
-                <div id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">2</div>
+                <div class="text-xs text-slate-500 font-medium">登録銘柄数 (親)</div>
+                <div id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">0</div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-                <div class="text-xs text-slate-500 font-medium">当選数 (当選)</div>
+                <div class="text-xs text-slate-500 font-medium">口座別 当選数</div>
                 <div id="stat-win" class="text-2xl font-bold text-emerald-600 mt-1">0</div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-                <div class="text-xs text-slate-500 font-medium">勝率 (当選/申込)</div>
+                <div class="text-xs text-slate-500 font-medium">全体勝率 (当選/申込)</div>
                 <div id="stat-rate" class="text-2xl font-bold text-indigo-600 mt-1">0.0%</div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
@@ -101,33 +101,18 @@
         <!-- 一覧 / 管理エリア -->
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h3 class="font-bold text-base text-slate-900">📋 IPO申込・スケジュール管理</h3>
+                <h3 class="font-bold text-base text-slate-900">📋 IPO親子レコード管理（銘柄 ＋ 複数証券会社申込）</h3>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <input type="text" id="search-input" oninput="renderApp()" placeholder="銘柄名で検索..." class="border border-slate-200 rounded-lg px-3 py-1.5 text-xs w-full sm:w-48 outline-none focus:border-indigo-500">
                     <button onclick="openAddModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition whitespace-nowrap">
-                        + 銘柄追加
+                        + 新規銘柄追加
                     </button>
                 </div>
             </div>
 
-            <!-- テーブル一覧 -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
-                        <tr>
-                            <th class="p-3">コード / 銘柄名</th>
-                            <th class="p-3">市場</th>
-                            <th class="p-3">BB期間</th>
-                            <th class="p-3">上場日</th>
-                            <th class="p-3">想定価格</th>
-                            <th class="p-3">利用証券 / ステータス</th>
-                            <th class="p-3 text-right">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ipo-table-body" class="divide-y divide-slate-100">
-                        <!-- JSで動的挿入 -->
-                    </tbody>
-                </table>
+            <!-- 銘柄リスト（親カード ＆ 子レコード群） -->
+            <div id="ipo-list-container" class="space-y-4">
+                <!-- JSで動的挿入 -->
             </div>
         </div>
 
@@ -163,7 +148,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-slate-500 mb-1">想定価格 (例: 1,500円)</label>
+                    <label class="block text-slate-500 mb-1">想定価格</label>
                     <input type="text" id="new-price" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="1,500円">
                 </div>
             </div>
@@ -176,82 +161,172 @@
 
     <!-- スクリプト -->
     <script>
-        let ipos = JSON.parse(localStorage.getItem('generation45_dashboard_ipos')) || [
-            { id: 1, code: "9991", name: "未来テクノロジー", market: "東証グロース", bbStart: "2026-06-01", listingDate: "2026-06-15", price: "1,500円", broker: "SBI証券", status: "未申込", profit: 0 },
-            { id: 2, code: "9992", name: "スマイル食品", market: "東証スタンダード", bbStart: "2026-06-10", listingDate: "2026-06-24", price: "2,200円", broker: "松井証券", status: "当選", profit: 75000 }
+        // 親子構造のデータモデル初期値
+        let ipos = JSON.parse(localStorage.getItem('generation45_parent_child_ipos')) || [
+            {
+                id: 1,
+                code: "9991",
+                name: "未来テクノロジー",
+                market: "東証グロース",
+                bbStart: "2026-06-01",
+                listingDate: "2026-06-15",
+                price: "1,500円",
+                // 子レコード（複数の証券会社ごとの申込状況）
+                brokers: [
+                    { id: 101, name: "SBI証券", status: "申込完了", profit: 0 },
+                    { id: 102, name: "松井証券", status: "落選", profit: 0 }
+                ]
+            },
+            {
+                id: 2,
+                code: "9992",
+                name: "スマイル食品",
+                market: "東証スタンダード",
+                bbStart: "2026-06-10",
+                listingDate: "2026-06-24",
+                price: "2,200円",
+                brokers: [
+                    { id: 201, name: "SBI証券", status: "当選", profit: 75000 },
+                    { id: 202, name: "マネックス証券", status: "申込完了", profit: 0 },
+                    { id: 203, name: "楽天証券", status: "落選", profit: 0 }
+                ]
+            }
         ];
 
         function renderApp() {
-            const tbody = document.getElementById('ipo-table-body');
+            const container = document.getElementById('ipo-list-container');
             const searchKeyword = document.getElementById('search-input').value.toLowerCase();
-            tbody.innerHTML = '';
+            container.innerHTML = '';
 
-            let totalCount = ipos.length;
-            let winCount = 0;
-            let appliedCount = 0;
+            let totalParentCount = ipos.length;
+            let totalWinCount = 0;
+            let totalAppliedCount = 0;
             let totalProfit = 0;
 
             const filtered = ipos.filter(i => i.name.toLowerCase().includes(searchKeyword) || i.code.includes(searchKeyword));
 
-            filtered.forEach(ipo => {
-                if (ipo.status !== '未申込') appliedCount++;
-                if (ipo.status === '当選') {
-                    winCount++;
-                    totalProfit += Number(ipo.profit || 0);
-                }
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">該当する銘柄が見つかりません。</div>';
+            }
 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition";
-                tr.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-bold text-slate-900">${ipo.name}</div>
-                        <div class="text-[11px] text-slate-400">${ipo.code}</div>
-                    </td>
-                    <td class="p-3 text-slate-600">${ipo.market}</td>
-                    <td class="p-3 text-slate-600">${ipo.bbStart || '-'}</td>
-                    <td class="p-3 text-slate-600">${ipo.listingDate || '-'}</td>
-                    <td class="p-3 font-medium text-slate-800">${ipo.price}</td>
-                    <td class="p-3 space-y-1">
-                        <select onchange="updateField(${ipo.id}, 'broker', this.value)" class="border border-slate-200 rounded px-2 py-1 text-xs bg-white text-slate-800 font-medium">
-                            <option value="SBI証券" ${ipo.broker === 'SBI証券' ? 'selected' : ''}>SBI証券</option>
-                            <option value="松井証券" ${ipo.broker === '松井証券' ? 'selected' : ''}>松井証券</option>
-                            <option value="マネックス証券" ${ipo.broker === 'マネックス証券' ? 'selected' : ''}>マネックス証券</option>
-                            <option value="楽天証券" ${ipo.broker === '楽天証券' ? 'selected' : ''}>楽天証券</option>
-                        </select>
-                        <select onchange="updateField(${ipo.id}, 'status', this.value)" class="border border-slate-200 rounded px-2 py-1 text-xs font-bold ${ipo.status === '当選' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-700 bg-white'}">
-                            <option value="未申込" ${ipo.status === '未申込' ? 'selected' : ''}>⏳ 未申込</option>
-                            <option value="申込完了" ${ipo.status === '申込完了' ? 'selected' : ''}>📝 申込完了</option>
-                            <option value="落選" ${ipo.status === '落選' ? 'selected' : ''}>❌ 落選</option>
-                            <option value="当選" ${ipo.status === '当選' ? 'selected' : ''}>🎉 当選！</option>
-                        </select>
-                    </td>
-                    <td class="p-3 text-right">
-                        <button onclick="deleteIPO(${ipo.id})" class="text-slate-400 hover:text-rose-600 font-bold px-2 py-1 text-xs transition">削除</button>
-                    </td>
+            filtered.forEach(parent => {
+                // 親カードの生成
+                const card = document.createElement('div');
+                card.className = "border border-slate-200 rounded-xl p-4 bg-white shadow-xs space-y-3";
+                
+                let brokersHtml = '';
+                parent.brokers.forEach(child => {
+                    if (child.status !== '未申込') totalAppliedCount++;
+                    if (child.status === '当選') {
+                        totalWinCount++;
+                        totalProfit += Number(child.profit || 0);
+                    }
+
+                    brokersHtml += `
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100 gap-2">
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <span class="text-[11px] font-bold text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">証券会社</span>
+                                <select onchange="updateChildBroker(${parent.id}, ${child.id}, 'name', this.value)" class="border border-slate-200 rounded px-2 py-1 text-xs bg-white font-medium text-slate-800">
+                                    <option value="SBI証券" ${child.name === 'SBI証券' ? 'selected' : ''}>SBI証券</option>
+                                    <option value="松井証券" ${child.name === '松井証券' ? 'selected' : ''}>松井証券</option>
+                                    <option value="マネックス証券" ${child.name === 'マネックス証券' ? 'selected' : ''}>マネックス証券</option>
+                                    <option value="楽天証券" ${child.name === '楽天証券' ? 'selected' : ''}>楽天証券</option>
+                                    <option value="大和証券" ${child.name === '大和証券' ? 'selected' : ''}>大和証券</option>
+                                    <option value="SMBC日興" ${child.name === 'SMBC日興' ? 'selected' : ''}>SMBC日興証券</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                                <select onchange="updateChildBroker(${parent.id}, ${child.id}, 'status', this.value)" class="border border-slate-200 rounded px-2 py-1 text-xs font-bold ${child.status === '当選' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-700 bg-white'}">
+                                    <option value="未申込" ${child.status === '未申込' ? 'selected' : ''}>⏳ 未申込</option>
+                                    <option value="申込完了" ${child.status === '申込完了' ? 'selected' : ''}>📝 申込完了</option>
+                                    <option value="落選" ${child.status === '落選' ? 'selected' : ''}>❌ 落選</option>
+                                    <option value="当選" ${child.status === '当選' ? 'selected' : ''}>🎉 当選！</option>
+                                </select>
+                                ${child.status === '当選' ? `
+                                    <input type="number" value="${child.profit}" onchange="updateChildBroker(${parent.id}, ${child.id}, 'profit', this.value)" placeholder="利益(円)" class="border border-emerald-200 bg-emerald-50/50 rounded px-2 py-1 text-xs w-24 text-emerald-900 font-bold" title="確定利益">
+                                ` : ''}
+                                <button onclick="deleteChildBroker(${parent.id}, ${child.id})" class="text-slate-400 hover:text-rose-600 text-xs px-1.5 py-1 font-bold">×</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${parent.code}</span>
+                                <span class="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded">${parent.market}</span>
+                                <span class="text-xs text-slate-400">想定: ${parent.price}</span>
+                            </div>
+                            <h4 class="font-bold text-base text-slate-900 mt-1">${parent.name} <span class="text-xs font-normal text-slate-500 ml-2">BB: ${parent.bbStart || '-'} 〜 / 上場: ${parent.listingDate || '-'}</span></h4>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button onclick="addChildBroker(${parent.id})" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-lg transition whitespace-nowrap">
+                                + 証券会社を追加
+                            </button>
+                            <button onclick="deleteParentIPO(${parent.id})" class="text-slate-400 hover:text-rose-600 text-xs font-bold px-2 py-1.5">
+                                銘柄削除
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 子レコード（証券会社ごとの申込一覧） -->
+                    <div class="space-y-2 pt-1">
+                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">申込状況（口座別）</div>
+                        ${brokersHtml || '<div class="text-xs text-slate-400 py-1">証券会社が追加されていません。「+ 証券会社を追加」から登録してください。</div>'}
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(card);
             });
 
-            // 統計データの更新
-            document.getElementById('stat-total').innerText = totalCount;
-            document.getElementById('stat-win').innerText = winCount;
-            document.getElementById('stat-rate').innerText = appliedCount > 0 ? ((winCount / appliedCount) * 100).toFixed(1) + '%' : '0.0%';
+            // 統計の更新
+            document.getElementById('stat-total').innerText = totalParentCount;
+            document.getElementById('stat-win').innerText = totalWinCount;
+            document.getElementById('stat-rate').innerText = totalAppliedCount > 0 ? ((totalWinCount / totalAppliedCount) * 100).toFixed(1) + '%' : '0.0%';
             document.getElementById('stat-profit').innerText = '¥' + totalProfit.toLocaleString();
 
-            localStorage.setItem('generation45_dashboard_ipos', JSON.stringify(ipos));
+            localStorage.setItem('generation45_parent_child_ipos', JSON.stringify(ipos));
         }
 
-        function updateField(id, field, value) {
-            const target = ipos.find(i => i.id === id);
-            if (target) {
-                target[field] = value;
+        // 子レコード（証券会社）の追加
+        function addChildBroker(parentId) {
+            const parent = ipos.find(i => i.id === parentId);
+            if (parent) {
+                parent.brokers.push({
+                    id: Date.now(),
+                    name: "SBI証券",
+                    status: "申込完了",
+                    profit: 0
+                });
                 renderApp();
             }
         }
 
-        function deleteIPO(id) {
-            if (confirm('この銘柄を削除しますか？')) {
-                ipos = ipos.filter(i => i.id !== id);
+        // 子レコードの更新
+        function updateChildBroker(parentId, childId, field, value) {
+            const parent = ipos.find(i => i.id === parentId);
+            if (parent) {
+                const child = parent.brokers.find(b => b.id === childId);
+                if (child) {
+                    child[field] = value;
+                    renderApp();
+                }
+            }
+        }
+
+        // 子レコードの削除
+        function deleteChildBroker(parentId, childId) {
+            const parent = ipos.find(i => i.id === parentId);
+            if (parent) {
+                parent.brokers = parent.brokers.filter(b => b.id !== childId);
+                renderApp();
+            }
+        }
+
+        // 親レコード（銘柄）の削除
+        function deleteParentIPO(parentId) {
+            if (confirm('この銘柄と、紐づくすべての証券会社申込データを削除しますか？')) {
+                ipos = ipos.filter(i => i.id !== parentId);
                 renderApp();
             }
         }
@@ -268,24 +343,25 @@
         function openAddModal() { document.getElementById('add-modal').classList.remove('hidden'); }
         function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); }
 
+        // 親レコード（新規銘柄）の追加
         function addNewIPO() {
             const name = document.getElementById('new-name').value;
             if (!name) { alert('銘柄名を入力してください'); return; }
             
-            const newObj = {
+            const newParent = {
                 id: Date.now(),
                 code: document.getElementById('new-code').value || '0000',
                 name: name,
-                market: document.getElementById('new-market').value || '東証',
+                market: document.getElementById('new-market').value || '東証グロース',
                 bbStart: document.getElementById('new-bbstart').value,
                 listingDate: document.getElementById('new-listing').value,
-                price: document.getElementById('new-price').value || '1,000円',
-                broker: 'SBI証券',
-                status: '未申込',
-                profit: 50000 // サンプル損益
+                price: document.getElementById('new-price').value || '1,500円',
+                brokers: [
+                    { id: Date.now() + 1, name: "SBI証券", status: "未申込", profit: 0 } // 初期でSBIを1つ紐付け
+                ]
             };
 
-            ipos.push(newObj);
+            ipos.push(newParent);
             closeAddModal();
             renderApp();
         }
