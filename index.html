@@ -14,34 +14,33 @@
 
     <!-- ヘッダー -->
     <header class="bg-slate-900 text-white shadow-md">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div>
                 <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/20">ミドル世代のマネー戦略</span>
                 <h1 class="text-xl font-bold mt-1.5 flex items-center gap-2">
                     <span>📈</span> 45歳からの堅実IPO＆資産形成ナビ
                 </h1>
             </div>
-            <div>
-                <button onclick="alert('最新のIPO情報を同期しました！');" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm cursor-pointer">
-                    <span>🔄</span> 最新IPO情報を自動取り込み
+            <div class="flex items-center gap-2">
+                <button onclick="syncLatestIPO()" id="sync-btn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                    <span>🔄</span> 最新IPO自動同期
                 </button>
             </div>
         </div>
     </header>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
         <!-- 45歳世代向け共感メッセージ ＆ アフィリエイト訴求バナー -->
         <section class="bg-gradient-to-br from-amber-50 via-white to-amber-50/50 border border-amber-200/80 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-slate-900 font-bold text-lg mb-2 flex items-center gap-2">
+            <h2 class="text-slate-900 font-bold text-base md:text-lg mb-2 flex items-center gap-2">
                 <span>🎯</span> 45歳、今だからこそ「手堅く増やす」選択を。
             </h2>
-            <p class="text-xs text-slate-600 leading-relaxed mb-4">
-                教育費や老後への不安が現実味を帯びてくるミドル世代。「一発逆転のハイリスク投資は怖いけれど、銀行に眠らせているだけではもったいない」——そんな私たちが、元本割れリスクを極限まで抑えて小さく始められるのがIPO（新規公開株）投資です。まずは資金不要の証券会社から準備を始めましょう。
+            <p class="text-xs md:text-sm text-slate-600 leading-relaxed mb-4">
+                教育費や老後への不安が現実味を帯びてくるミドル世代。元本割れリスクを極限まで抑えて小さく始められるIPO投資で、まずは資金不要の証券会社から準備を始めましょう。
             </p>
             
-            <!-- 3枚のカードを確実に収めるグリッド -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- SBI証券 -->
                 <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-between shadow-xs">
@@ -79,107 +78,219 @@
             </div>
         </section>
 
-        <!-- タブ切り替え -->
-        <div class="flex border-b border-slate-200 gap-6 text-sm font-medium">
-            <button class="pb-3 border-b-2 border-slate-900 text-slate-900 font-bold">
-                📋 IPO申込・管理リスト
-            </button>
+        <!-- ダッシュボード（統計カード） -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div class="text-xs text-slate-500 font-medium">登録銘柄数</div>
+                <div id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">2</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div class="text-xs text-slate-500 font-medium">当選数 (当選)</div>
+                <div id="stat-win" class="text-2xl font-bold text-emerald-600 mt-1">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div class="text-xs text-slate-500 font-medium">勝率 (当選/申込)</div>
+                <div id="stat-rate" class="text-2xl font-bold text-indigo-600 mt-1">0.0%</div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <div class="text-xs text-slate-500 font-medium">確定損益合計</div>
+                <div id="stat-profit" class="text-2xl font-bold text-amber-600 mt-1">¥0</div>
+            </div>
         </div>
 
-        <!-- IPOリストセクション -->
-        <div class="space-y-4">
-            <div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200">
-                <div>
-                    <h3 class="font-bold text-sm text-slate-800">直近のIPOスケジュール（自動取り込み済）</h3>
-                    <p class="text-xs text-slate-500">申し込む証券会社と結果を記録できます。</p>
+        <!-- 一覧 / 管理エリア -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h3 class="font-bold text-base text-slate-900">📋 IPO申込・スケジュール管理</h3>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <input type="text" id="search-input" oninput="renderApp()" placeholder="銘柄名で検索..." class="border border-slate-200 rounded-lg px-3 py-1.5 text-xs w-full sm:w-48 outline-none focus:border-indigo-500">
+                    <button onclick="openAddModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition whitespace-nowrap">
+                        + 銘柄追加
+                    </button>
                 </div>
-                <div class="text-xs text-slate-400 bg-slate-50 px-2.5 py-1 rounded border border-slate-100">最終同期: 今日</div>
             </div>
 
-            <!-- 銘柄カード一覧 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                <!-- 銘柄1 -->
-                <div class="bg-white p-5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-xs">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded mr-1">9991</span>
-                                <span class="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded">東証グロース</span>
-                            </div>
-                            <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">評価: ★★☆</span>
-                        </div>
-                        <h4 class="font-bold text-base text-slate-900 mb-2">未来テクノロジー</h4>
-                        <div class="text-xs text-slate-600 space-y-1.5 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <div class="flex justify-between"><span>申込期間 (BB):</span> <span class="font-medium text-slate-800">2026-06-01 〜 2026-06-05</span></div>
-                            <div class="flex justify-between"><span>上場予定日:</span> <span class="font-medium text-slate-800">2026-06-15</span></div>
-                            <div class="flex justify-between"><span>想定価格:</span> <span class="font-medium text-slate-800">1,500円</span></div>
-                        </div>
-                    </div>
-                    <div class="space-y-3 pt-3 border-t border-slate-100">
-                        <div class="flex items-center justify-between text-xs">
-                            <label class="text-slate-500 font-medium">利用する証券会社:</label>
-                            <select class="border border-slate-200 rounded px-2 py-1 text-xs bg-white font-medium text-slate-800">
-                                <option>SBI証券 (主幹事)</option>
-                                <option>松井証券 (資金不要)</option>
-                                <option>マネックス証券</option>
-                                <option>楽天証券</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-slate-500">ステータス:</span>
-                            <select class="border border-slate-200 rounded px-2 py-1 text-xs font-bold text-slate-700 bg-white">
-                                <option>⏳ 未申込</option>
-                                <option>📝 申込完了</option>
-                                <option>❌ 落選</option>
-                                <option>🎉 当選！</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 銘柄2 -->
-                <div class="bg-white p-5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-xs">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded mr-1">9992</span>
-                                <span class="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded">東証スタンダード</span>
-                            </div>
-                            <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">評価: ★★★</span>
-                        </div>
-                        <h4 class="font-bold text-base text-slate-900 mb-2">スマイル食品</h4>
-                        <div class="text-xs text-slate-600 space-y-1.5 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <div class="flex justify-between"><span>申込期間 (BB):</span> <span class="font-medium text-slate-800">2026-06-10 〜 2026-06-16</span></div>
-                            <div class="flex justify-between"><span>上場予定日:</span> <span class="font-medium text-slate-800">2026-06-24</span></div>
-                            <div class="flex justify-between"><span>想定価格:</span> <span class="font-medium text-slate-800">2,200円</span></div>
-                        </div>
-                    </div>
-                    <div class="space-y-3 pt-3 border-t border-slate-100">
-                        <div class="flex items-center justify-between text-xs">
-                            <label class="text-slate-500 font-medium">利用する証券会社:</label>
-                            <select class="border border-slate-200 rounded px-2 py-1 text-xs bg-white font-medium text-slate-800">
-                                <option>松井証券 (資金不要)</option>
-                                <option>SBI証券 (主幹事)</option>
-                                <option>マネックス証券</option>
-                                <option>楽天証券</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-slate-500">ステータス:</span>
-                            <select class="border border-slate-200 rounded px-2 py-1 text-xs font-bold text-slate-700 bg-white">
-                                <option>⏳ 未申込</option>
-                                <option>📝 申込完了</option>
-                                <option>❌ 落選</option>
-                                <option>🎉 当選！</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
+            <!-- テーブル一覧 -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">コード / 銘柄名</th>
+                            <th class="p-3">市場</th>
+                            <th class="p-3">BB期間</th>
+                            <th class="p-3">上場日</th>
+                            <th class="p-3">想定価格</th>
+                            <th class="p-3">利用証券 / ステータス</th>
+                            <th class="p-3 text-right">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ipo-table-body" class="divide-y divide-slate-100">
+                        <!-- JSで動的挿入 -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
     </main>
+
+    <!-- 銘柄追加モーダル -->
+    <div id="add-modal" class="fixed inset-0 bg-slate-900/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <h3 class="font-bold text-base text-slate-900">新規IPO銘柄の追加</h3>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-500 mb-1">銘柄名</label>
+                    <input type="text" id="new-name" class="w-full border border-slate-200 rounded-lg p-2 outline-none focus:border-indigo-500" placeholder="例: 未来テクノロジー">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-500 mb-1">証券コード</label>
+                        <input type="text" id="new-code" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="9991">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">市場</label>
+                        <input type="text" id="new-market" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="東証グロース">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-500 mb-1">BB開始日</label>
+                        <input type="date" id="new-bbstart" class="w-full border border-slate-200 rounded-lg p-2 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">上場日</label>
+                        <input type="date" id="new-listing" class="w-full border border-slate-200 rounded-lg p-2 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-500 mb-1">想定価格 (例: 1,500円)</label>
+                    <input type="text" id="new-price" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="1,500円">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">キャンセル</button>
+                <button onclick="addNewIPO()" class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">追加する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script>
+        let ipos = JSON.parse(localStorage.getItem('generation45_dashboard_ipos')) || [
+            { id: 1, code: "9991", name: "未来テクノロジー", market: "東証グロース", bbStart: "2026-06-01", listingDate: "2026-06-15", price: "1,500円", broker: "SBI証券", status: "未申込", profit: 0 },
+            { id: 2, code: "9992", name: "スマイル食品", market: "東証スタンダード", bbStart: "2026-06-10", listingDate: "2026-06-24", price: "2,200円", broker: "松井証券", status: "当選", profit: 75000 }
+        ];
+
+        function renderApp() {
+            const tbody = document.getElementById('ipo-table-body');
+            const searchKeyword = document.getElementById('search-input').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            let totalCount = ipos.length;
+            let winCount = 0;
+            let appliedCount = 0;
+            let totalProfit = 0;
+
+            const filtered = ipos.filter(i => i.name.toLowerCase().includes(searchKeyword) || i.code.includes(searchKeyword));
+
+            filtered.forEach(ipo => {
+                if (ipo.status !== '未申込') appliedCount++;
+                if (ipo.status === '当選') {
+                    winCount++;
+                    totalProfit += Number(ipo.profit || 0);
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-bold text-slate-900">${ipo.name}</div>
+                        <div class="text-[11px] text-slate-400">${ipo.code}</div>
+                    </td>
+                    <td class="p-3 text-slate-600">${ipo.market}</td>
+                    <td class="p-3 text-slate-600">${ipo.bbStart || '-'}</td>
+                    <td class="p-3 text-slate-600">${ipo.listingDate || '-'}</td>
+                    <td class="p-3 font-medium text-slate-800">${ipo.price}</td>
+                    <td class="p-3 space-y-1">
+                        <select onchange="updateField(${ipo.id}, 'broker', this.value)" class="border border-slate-200 rounded px-2 py-1 text-xs bg-white text-slate-800 font-medium">
+                            <option value="SBI証券" ${ipo.broker === 'SBI証券' ? 'selected' : ''}>SBI証券</option>
+                            <option value="松井証券" ${ipo.broker === '松井証券' ? 'selected' : ''}>松井証券</option>
+                            <option value="マネックス証券" ${ipo.broker === 'マネックス証券' ? 'selected' : ''}>マネックス証券</option>
+                            <option value="楽天証券" ${ipo.broker === '楽天証券' ? 'selected' : ''}>楽天証券</option>
+                        </select>
+                        <select onchange="updateField(${ipo.id}, 'status', this.value)" class="border border-slate-200 rounded px-2 py-1 text-xs font-bold ${ipo.status === '当選' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-700 bg-white'}">
+                            <option value="未申込" ${ipo.status === '未申込' ? 'selected' : ''}>⏳ 未申込</option>
+                            <option value="申込完了" ${ipo.status === '申込完了' ? 'selected' : ''}>📝 申込完了</option>
+                            <option value="落選" ${ipo.status === '落選' ? 'selected' : ''}>❌ 落選</option>
+                            <option value="当選" ${ipo.status === '当選' ? 'selected' : ''}>🎉 当選！</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteIPO(${ipo.id})" class="text-slate-400 hover:text-rose-600 font-bold px-2 py-1 text-xs transition">削除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // 統計データの更新
+            document.getElementById('stat-total').innerText = totalCount;
+            document.getElementById('stat-win').innerText = winCount;
+            document.getElementById('stat-rate').innerText = appliedCount > 0 ? ((winCount / appliedCount) * 100).toFixed(1) + '%' : '0.0%';
+            document.getElementById('stat-profit').innerText = '¥' + totalProfit.toLocaleString();
+
+            localStorage.setItem('generation45_dashboard_ipos', JSON.stringify(ipos));
+        }
+
+        function updateField(id, field, value) {
+            const target = ipos.find(i => i.id === id);
+            if (target) {
+                target[field] = value;
+                renderApp();
+            }
+        }
+
+        function deleteIPO(id) {
+            if (confirm('この銘柄を削除しますか？')) {
+                ipos = ipos.filter(i => i.id !== id);
+                renderApp();
+            }
+        }
+
+        function syncLatestIPO() {
+            const btn = document.getElementById('sync-btn');
+            btn.innerHTML = '<span>⏳</span> 同期中...';
+            setTimeout(() => {
+                btn.innerHTML = '<span>✅</span> 同期完了';
+                setTimeout(() => { btn.innerHTML = '<span>🔄</span> 最新IPO自動同期'; }, 2000);
+            }, 800);
+        }
+
+        function openAddModal() { document.getElementById('add-modal').classList.remove('hidden'); }
+        function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); }
+
+        function addNewIPO() {
+            const name = document.getElementById('new-name').value;
+            if (!name) { alert('銘柄名を入力してください'); return; }
+            
+            const newObj = {
+                id: Date.now(),
+                code: document.getElementById('new-code').value || '0000',
+                name: name,
+                market: document.getElementById('new-market').value || '東証',
+                bbStart: document.getElementById('new-bbstart').value,
+                listingDate: document.getElementById('new-listing').value,
+                price: document.getElementById('new-price').value || '1,000円',
+                broker: 'SBI証券',
+                status: '未申込',
+                profit: 50000 // サンプル損益
+            };
+
+            ipos.push(newObj);
+            closeAddModal();
+            renderApp();
+        }
+
+        renderApp();
+    </script>
 </body>
 </html>
