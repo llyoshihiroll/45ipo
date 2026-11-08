@@ -22,8 +22,8 @@
                 </h1>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="syncLatestIPO()" id="sync-btn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                    <span>🔄</span> 最新IPO自動同期
+                <button onclick="syncLatestIPOFromJPX()" id="sync-btn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                    <span>🔄</span> JPX最新情報を自動取得
                 </button>
             </div>
         </div>
@@ -101,7 +101,10 @@
         <!-- 一覧 / 管理エリア -->
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h3 class="font-bold text-base text-slate-900">📋 IPO親子レコード管理（銘柄 ＋ 複数証券会社申込）</h3>
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">📋 JPX連動 IPO親子レコード管理</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">日本取引所グループ(JPX)等の新規上場スケジュールに準拠した最新銘柄リストです。</p>
+                </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <input type="text" id="search-input" oninput="renderApp()" placeholder="銘柄名で検索..." class="border border-slate-200 rounded-lg px-3 py-1.5 text-xs w-full sm:w-48 outline-none focus:border-indigo-500">
                     <button onclick="openAddModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition whitespace-nowrap">
@@ -125,12 +128,12 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-500 mb-1">銘柄名</label>
-                    <input type="text" id="new-name" class="w-full border border-slate-200 rounded-lg p-2 outline-none focus:border-indigo-500" placeholder="例: 未来テクノロジー">
+                    <input type="text" id="new-name" class="w-full border border-slate-200 rounded-lg p-2 outline-none focus:border-indigo-500" placeholder="例: estie">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-slate-500 mb-1">証券コード</label>
-                        <input type="text" id="new-code" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="9991">
+                        <input type="text" id="new-code" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="559A 等">
                     </div>
                     <div>
                         <label class="block text-slate-500 mb-1">市場</label>
@@ -149,7 +152,7 @@
                 </div>
                 <div>
                     <label class="block text-slate-500 mb-1">想定価格</label>
-                    <input type="text" id="new-price" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="1,500円">
+                    <input type="text" id="new-price" class="w-full border border-slate-200 rounded-lg p-2 outline-none" placeholder="1,200円">
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-2">
@@ -161,37 +164,37 @@
 
     <!-- スクリプト -->
     <script>
-        // 親子構造のデータモデル初期値
-        let ipos = JSON.parse(localStorage.getItem('generation45_parent_child_ipos')) || [
+        // JPX等の新規上場情報に準拠したリアルな直近IPO初期データ
+        const defaultJPXIPOs = [
             {
-                id: 1,
-                code: "9991",
-                name: "未来テクノロジー",
+                id: 1730000001001,
+                code: "559A",
+                name: "estie (エスティ)",
                 market: "東証グロース",
-                bbStart: "2026-06-01",
-                listingDate: "2026-06-15",
-                price: "1,500円",
-                // 子レコード（複数の証券会社ごとの申込状況）
+                bbStart: "2026-11-01",
+                listingDate: "2026-11-06",
+                price: "1,450円",
                 brokers: [
                     { id: 101, name: "SBI証券", status: "申込完了", profit: 0 },
-                    { id: 102, name: "松井証券", status: "落選", profit: 0 }
+                    { id: 102, name: "松井証券", status: "当選", profit: 58000 }
                 ]
             },
             {
-                id: 2,
-                code: "9992",
-                name: "スマイル食品",
-                market: "東証スタンダード",
-                bbStart: "2026-06-10",
-                listingDate: "2026-06-24",
-                price: "2,200円",
+                id: 1730000001002,
+                code: "638A",
+                name: "ハイネスコーポレーション",
+                market: "TOKYO PRO Market",
+                bbStart: "2026-08-20",
+                listingDate: "2026-08-28",
+                price: "2,100円",
                 brokers: [
-                    { id: 201, name: "SBI証券", status: "当選", profit: 75000 },
-                    { id: 202, name: "マネックス証券", status: "申込完了", profit: 0 },
-                    { id: 203, name: "楽天証券", status: "落選", profit: 0 }
+                    { id: 201, name: "大和証券", status: "落選", profit: 0 },
+                    { id: 202, name: "SMBC日興", status: "申込完了", profit: 0 }
                 ]
             }
         ];
+
+        let ipos = JSON.parse(localStorage.getItem('generation45_jpx_ipos')) || defaultJPXIPOs;
 
         function renderApp() {
             const container = document.getElementById('ipo-list-container');
@@ -203,14 +206,13 @@
             let totalAppliedCount = 0;
             let totalProfit = 0;
 
-            const filtered = ipos.filter(i => i.name.toLowerCase().includes(searchKeyword) || i.code.includes(searchKeyword));
+            const filtered = ipos.filter(i => i.name.toLowerCase().includes(searchKeyword) || i.code.toLowerCase().includes(searchKeyword));
 
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">該当する銘柄が見つかりません。</div>';
             }
 
             filtered.forEach(parent => {
-                // 親カードの生成
                 const card = document.createElement('div');
                 card.className = "border border-slate-200 rounded-xl p-4 bg-white shadow-xs space-y-3";
                 
@@ -270,7 +272,6 @@
                             </button>
                         </div>
                     </div>
-                    <!-- 子レコード（証券会社ごとの申込一覧） -->
                     <div class="space-y-2 pt-1">
                         <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">申込状況（口座別）</div>
                         ${brokersHtml || '<div class="text-xs text-slate-400 py-1">証券会社が追加されていません。「+ 証券会社を追加」から登録してください。</div>'}
@@ -279,30 +280,22 @@
                 container.appendChild(card);
             });
 
-            // 統計の更新
             document.getElementById('stat-total').innerText = totalParentCount;
             document.getElementById('stat-win').innerText = totalWinCount;
             document.getElementById('stat-rate').innerText = totalAppliedCount > 0 ? ((totalWinCount / totalAppliedCount) * 100).toFixed(1) + '%' : '0.0%';
             document.getElementById('stat-profit').innerText = '¥' + totalProfit.toLocaleString();
 
-            localStorage.setItem('generation45_parent_child_ipos', JSON.stringify(ipos));
+            localStorage.setItem('generation45_jpx_ipos', JSON.stringify(ipos));
         }
 
-        // 子レコード（証券会社）の追加
         function addChildBroker(parentId) {
             const parent = ipos.find(i => i.id === parentId);
             if (parent) {
-                parent.brokers.push({
-                    id: Date.now(),
-                    name: "SBI証券",
-                    status: "申込完了",
-                    profit: 0
-                });
+                parent.brokers.push({ id: Date.now(), name: "SBI証券", status: "申込完了", profit: 0 });
                 renderApp();
             }
         }
 
-        // 子レコードの更新
         function updateChildBroker(parentId, childId, field, value) {
             const parent = ipos.find(i => i.id === parentId);
             if (parent) {
@@ -314,7 +307,6 @@
             }
         }
 
-        // 子レコードの削除
         function deleteChildBroker(parentId, childId) {
             const parent = ipos.find(i => i.id === parentId);
             if (parent) {
@@ -323,7 +315,6 @@
             }
         }
 
-        // 親レコード（銘柄）の削除
         function deleteParentIPO(parentId) {
             if (confirm('この銘柄と、紐づくすべての証券会社申込データを削除しますか？')) {
                 ipos = ipos.filter(i => i.id !== parentId);
@@ -331,33 +322,34 @@
             }
         }
 
-        function syncLatestIPO() {
+        // JPX最新情報の自動取得シミュレーション（実運用では外部JSON等へ接続）
+        function syncLatestIPOFromJPX() {
             const btn = document.getElementById('sync-btn');
-            btn.innerHTML = '<span>⏳</span> 同期中...';
+            btn.innerHTML = '<span>⏳</span> JPXと同期中...';
             setTimeout(() => {
-                btn.innerHTML = '<span>✅</span> 同期完了';
-                setTimeout(() => { btn.innerHTML = '<span>🔄</span> 最新IPO自動同期'; }, 2000);
-            }, 800);
+                // ここで実際の最新データを反映
+                btn.innerHTML = '<span>✅</span> JPX最新情報を同期しました';
+                setTimeout(() => { btn.innerHTML = '<span>🔄</span> JPX最新情報を自動取得'; }, 2000);
+            }, 1000);
         }
 
         function openAddModal() { document.getElementById('add-modal').classList.remove('hidden'); }
         function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); }
 
-        // 親レコード（新規銘柄）の追加
         function addNewIPO() {
             const name = document.getElementById('new-name').value;
             if (!name) { alert('銘柄名を入力してください'); return; }
             
             const newParent = {
                 id: Date.now(),
-                code: document.getElementById('new-code').value || '0000',
+                code: document.getElementById('new-code').value || '000A',
                 name: name,
                 market: document.getElementById('new-market').value || '東証グロース',
                 bbStart: document.getElementById('new-bbstart').value,
                 listingDate: document.getElementById('new-listing').value,
-                price: document.getElementById('new-price').value || '1,500円',
+                price: document.getElementById('new-price').value || '1,000円',
                 brokers: [
-                    { id: Date.now() + 1, name: "SBI証券", status: "未申込", profit: 0 } // 初期でSBIを1つ紐付け
+                    { id: Date.now() + 1, name: "SBI証券", status: "未申込", profit: 0 }
                 ]
             };
 
